@@ -39,8 +39,11 @@
     Object.keys(d.days).forEach(function (date) {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Array.isArray(d.days[date])) return;
       var list = d.days[date].filter(function (e) {
-        return e && typeof e.id === 'string' && typeof e.name === 'string' &&
-          MEALS.indexOf(e.meal) >= 0 && (e.per100 || e.fixed);
+        if (!e || typeof e.id !== 'string' || typeof e.name !== 'string' || MEALS.indexOf(e.meal) < 0) return false;
+        if (e.fixed) return typeof e.fixed === 'object';
+        // A weighed entry is scaled by its grams; without a real weight every
+        // total it touches comes out NaN, the day's and the week chart's.
+        return !!e.per100 && typeof e.per100 === 'object' && typeof e.grams === 'number' && e.grams > 0;
       });
       if (list.length) out.days[date] = list;
     });
